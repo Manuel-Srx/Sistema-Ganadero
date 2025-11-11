@@ -1,0 +1,48 @@
+#:kivy 2.3.0
+
+WindowManager:
+    MenuScreen:
+
+<MenuScreen@Screen>:
+    name: "menu"
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: 40
+        spacing: 20
+        canvas.before:
+            Color:
+                rgba: 0.05, 0.05, 0.05, 1  # Fondo oscuro
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: "SISTEMA GANADERO"
+            font_size: "28sp"
+            bold: True
+            color: 1, 1, 1, 1
+
+        Button:
+            text: "Inventario de Animales"
+            font_size: "18sp"
+            size_hint_y: None
+            height: 50
+            background_color: (0.2, 0.6, 0.2, 1)
+            on_release:
+                app.root.current = "inventario"
+
+        Button:
+            text: "Configuración"
+            font_size: "18sp"
+            size_hint_y: None
+            height: 50
+            background_color: (0.2, 0.4, 0.6, 1)
+
+        Button:
+            text: "Salir"
+            font_size: "18sp"
+            size_hint_y: None
+            height: 50
+            background_color: (0.6, 0.2, 0.2, 1)
+            on_release: app.stop()

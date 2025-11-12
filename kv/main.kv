@@ -1,7 +1,10 @@
 #:kivy 2.3.0
 
-WindowManager:
+<WindowManager>:
     MenuScreen:
+    InventarioScreen:
+    VeterinariaScreen:
+
 
 <MenuScreen@Screen>:
     name: "menu"
@@ -12,37 +15,246 @@ WindowManager:
         spacing: 20
         canvas.before:
             Color:
-                rgba: 0.05, 0.05, 0.05, 1  # Fondo oscuro
+                rgba: 0.05, 0.05, 0.05, 1
             Rectangle:
                 pos: self.pos
                 size: self.size
 
         Label:
-            text: "SISTEMA GANADERO"
+            text: "🐄 SISTEMA GANADERO"
             font_size: "28sp"
             bold: True
             color: 1, 1, 1, 1
 
         Button:
-            text: "Inventario de Animales"
+            text: "📋 Inventario de Animales"
             font_size: "18sp"
             size_hint_y: None
             height: 50
-            background_color: (0.2, 0.6, 0.2, 1)
-            on_release:
-                app.root.current = "inventario"
+            background_color: 0.2, 0.6, 0.2, 1
+            on_release: app.root.current = "inventario"
 
         Button:
-            text: "Configuración"
+            text: "💊 Módulo Veterinario"
             font_size: "18sp"
             size_hint_y: None
             height: 50
-            background_color: (0.2, 0.4, 0.6, 1)
+            background_color: 0.4, 0.5, 0.8, 1
+            on_release: app.root.current = "veterinaria"
 
         Button:
-            text: "Salir"
+            text: "⚙️ Configuración"
             font_size: "18sp"
             size_hint_y: None
             height: 50
-            background_color: (0.6, 0.2, 0.2, 1)
+            background_color: 0.2, 0.4, 0.6, 1
+
+        Button:
+            text: "🚪 Salir"
+            font_size: "18sp"
+            size_hint_y: None
+            height: 50
+            background_color: 0.6, 0.2, 0.2, 1
             on_release: app.stop()
+
+
+<InventarioScreen>:
+    name: "inventario"
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: 30
+        spacing: 15
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: "📋 Inventario de Ganado"
+            font_size: "26sp"
+            bold: True
+            color: 0, 0.2, 0.5, 1
+            size_hint_y: None
+            height: 50
+
+        GridLayout:
+            cols: 2
+            row_default_height: 50
+            spacing: 10
+            size_hint_y: None
+            height: self.minimum_height
+
+            TextInput:
+                id: nombre_input
+                hint_text: "Nombre del animal"
+                multiline: False
+
+            BoxLayout:
+                orientation: "horizontal"
+                spacing: 5
+                TextInput:
+                    id: raza_input
+                    hint_text: "Escriba nueva raza o seleccione"
+                    multiline: False
+                Spinner:
+                    id: raza_spinner
+                    text: "Seleccionar raza"
+                    values: root.razas
+                    size_hint_x: 0.6
+
+            TextInput:
+                id: edad_input
+                hint_text: "Edad"
+                input_filter: "int"
+                multiline: False
+
+            TextInput:
+                id: peso_input
+                hint_text: "Peso (kg)"
+                input_filter: "float"
+                multiline: False
+
+            Spinner:
+                id: sexo_spinner
+                text: "Seleccione sexo"
+                values: ["Macho", "Hembra"]
+
+            TextInput:
+                id: fecha_input
+                hint_text: "Fecha nacimiento (YYYY-MM-DD)"
+                multiline: False
+
+            Spinner:
+                id: salud_spinner
+                text: "Seleccione estado"
+                values: ["Sana", "Enferma"]
+                on_text: root.cambiar_salud(self.text)
+
+            TextInput:
+                id: obs_input
+                hint_text: "Observaciones"
+                disabled: True
+                multiline: True
+
+        Button:
+            text: "Agregar animal"
+            size_hint_y: None
+            height: 50
+            background_color: 0, 0.5, 0, 1
+            color: 1, 1, 1, 1
+            bold: True
+            on_release: root.agregar_animal()
+
+        RecycleView:
+            id: rv_animales
+            viewclass: "Label"
+            size_hint_y: 0.5
+            RecycleBoxLayout:
+                orientation: "vertical"
+                default_size: None, dp(40)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+
+        Button:
+            text: "⬅️ Volver al menú"
+            size_hint_y: None
+            height: 50
+            background_color: 0.3, 0.3, 0.3, 1
+            color: 1, 1, 1, 1
+            on_release: app.root.current = "menu"
+# -------------------------
+# PANTALLA VETERINARIA
+# -------------------------
+<VeterinariaScreen>:
+    name: "veterinaria"
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: 30
+        spacing: 15
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: "🐮 Módulo Veterinario"
+            font_size: "26sp"
+            bold: True
+            color: 0.1, 0.2, 0.5, 1
+            size_hint_y: None
+            height: 50
+
+        GridLayout:
+            cols: 2
+            row_default_height: 50
+            spacing: 10
+            size_hint_y: None
+            height: self.minimum_height
+
+            TextInput:
+                id: qr_input
+                hint_text: "Escanee o ingrese código QR"
+                multiline: False
+
+            Button:
+                text: "📷 Escanear QR"
+                size_hint_x: 0.5
+                on_release: root.buscar_por_qr(qr_input.text)
+
+            TextInput:
+                id: nombre_input
+                hint_text: "Nombre del animal"
+                readonly: True
+
+            TextInput:
+                id: raza_input
+                hint_text: "Raza"
+                readonly: True
+
+            TextInput:
+                id: sintomas_input
+                hint_text: "Síntomas observados"
+                multiline: True
+
+            TextInput:
+                id: diagnostico_input
+                hint_text: "Diagnóstico (automático)"
+                readonly: True
+
+            TextInput:
+                id: medicamento_input
+                hint_text: "Medicamento"
+                readonly: True
+
+            TextInput:
+                id: dosis_input
+                hint_text: "Dosis"
+                readonly: True
+
+            TextInput:
+                id: duracion_input
+                hint_text: "Duración (días)"
+                readonly: True
+
+        Button:
+            text: "🔍 Generar diagnóstico"
+            size_hint_y: None
+            height: 50
+            background_color: 0.1, 0.5, 0.1, 1
+            color: 1, 1, 1, 1
+            on_release: root.generar_diagnostico()
+
+        Button:
+            text: "⬅️ Volver al menú"
+            size_hint_y: None
+            height: 50
+            background_color: 0.3, 0.3, 0.3, 1
+            color: 1, 1, 1, 1
+            on_release: app.root.current = "menu"

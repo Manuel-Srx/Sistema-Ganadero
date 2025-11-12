@@ -1,44 +1,108 @@
 import sqlite3
-import os
 
-# Crear carpeta si no existe
-if not os.path.exists("database"):
-    os.makedirs("database")
+DB_PATH = "ganado.db"
 
-# Función para conectar a la base de datos
 def conectar():
-    conn = sqlite3.connect("database/ganado.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('''
+
+    # Tabla principal de animales
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS animales (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            codigo TEXT UNIQUE,
             nombre TEXT,
             raza TEXT,
-            peso REAL,
             edad INTEGER,
-            estado TEXT
+            peso REAL,
+            sexo TEXT,
+            fecha_nacimiento TEXT,
+            salud TEXT,
+            observaciones TEXT
         )
-    ''')
+    """)
+
+    # Tabla de razas
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS razas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT UNIQUE
+        )
+    """)
+
+    # 🩺 Nueva tabla veterinaria
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tratamientos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            animal TEXT,
+            diagnostico TEXT,
+            medicamento TEXT,
+            dosis TEXT,
+            fecha TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
-# Función para agregar un nuevo animal
-def agregar_animal(codigo, nombre, raza, peso, edad, estado):
-    conn = sqlite3.connect("database/ganado.db")
+
+# ----- CRUD Animales -----
+def agregar_raza(raza):
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO animales (codigo, nombre, raza, peso, edad, estado)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (codigo, nombre, raza, peso, edad, estado))
+    try:
+        cursor.execute("INSERT INTO razas (nombre) VALUES (?)", (raza,))
+    except sqlite3.IntegrityError:
+        pass
     conn.commit()
     conn.close()
 
-# Función para obtener todos los animales
+
+def obtener_razas():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT nombre FROM razas")
+    razas = [r[0] for r in cursor.fetchall()]
+    conn.close()
+    return razas
+
+
+def agregar_animal(nombre, raza, edad, peso, sexo, fecha_nacimiento, salud, observaciones):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO animales (nombre, raza, edad, peso, sexo, fecha_nacimiento, salud, observaciones)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (nombre, raza, edad, peso, sexo, fecha_nacimiento, salud, observaciones))
+    conn.commit()
+    conn.close()
+    agregar_raza(raza)
+
+
 def obtener_animales():
-    conn = sqlite3.connect("database/ganado.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM animales")
-    datos = cursor.fetchall()
+    animales = cursor.fetchall()
     conn.close()
-    return datos
+    return animales
+
+
+# ----- CRUD Veterinaria -----
+def agregar_tratamiento(animal, diagnostico, medicamento, dosis, fecha):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO tratamientos (animal, diagnostico, medicamento, dosis, fecha)
+        VALUES (?, ?, ?, ?, ?)
+    """, (animal, diagnostico, medicamento, dosis, fecha))
+    conn.commit()
+    conn.close()
+
+
+def obtener_tratamientos():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tratamientos")
+    tratamientos = cursor.fetchall()
+    conn.close()
+    return tratamientos

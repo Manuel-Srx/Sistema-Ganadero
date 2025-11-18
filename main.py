@@ -3,6 +3,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import ListProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
+from kivy.uix.screenmanager import Screen
+from kivy.properties import ListProperty, DictProperty
 
 # Tamaño de la ventana (opcional)
 Window.size = (900, 600)
@@ -37,21 +39,17 @@ class InventarioScreen(Screen):
         salud = self.ids.salud_spinner.text.strip()
         obs = self.ids.obs_input.text.strip()
 
-        # Si no se llena el nombre, no agrega
         if not nombre:
             print("⚠️ Debes ingresar al menos el nombre del animal.")
             return
 
-        # Guarda la nueva raza si no existe
         if raza_nueva and raza_nueva not in self.razas:
             self.razas.append(raza_nueva)
             self.ids.raza_spinner.values = self.razas
 
-        # Muestra en lista
         texto = f"{nombre} | {raza_nueva or raza_sel} | {sexo} | {salud} | {peso} kg"
         self.ids.rv_animales.data.append({"text": texto})
 
-        # Limpia campos
         for campo in ["nombre_input", "raza_input", "edad_input", "peso_input", "fecha_input", "obs_input"]:
             self.ids[campo].text = ""
         self.ids.salud_spinner.text = "Seleccione estado"
@@ -60,52 +58,73 @@ class InventarioScreen(Screen):
         self.ids.obs_input.disabled = True
 
 
-from db_manager import conectar, agregar_tratamiento, obtener_tratamientos
+# -------------------------
+# MÓDULO VETERINARIO TIPO IA
+# -------------------------
+
 
 class VeterinariaScreen(Screen):
-    pass
 
-class VeterinariaScreen(Screen):
-    animales = {
-        "QR001": {"nombre": "Luna", "raza": "Holstein"},
-        "QR002": {"nombre": "Toro", "raza": "Brahman"},
-        "QR003": {"nombre": "Nube", "raza": "Angus"}
-    }
+    # Lista de síntomas para el Spinner
+    lista_sintomas = ListProperty([
+        "Fiebre",
+        "Diarrea",
+        "Tos",
+        "Secreción nasal",
+        "Pérdida de apetito",
+        "Cojeo",
+        "Vómito",
+        "Decaimiento"
+    ])
 
-    def buscar_por_qr(self, codigo):
-        """Simula lectura de QR y autocompleta datos"""
-        if codigo in self.animales:
-            self.ids.nombre_input.text = self.animales[codigo]["nombre"]
-            self.ids.raza_input.text = self.animales[codigo]["raza"]
-        else:
-            self.ids.nombre_input.text = ""
-            self.ids.raza_input.text = ""
-            self.ids.diagnostico_input.text = ""
-            self.ids.medicamento_input.text = ""
-            self.ids.dosis_input.text = ""
-            self.ids.duracion_input.text = ""
+    # Síntomas seleccionados por el usuario
+    sintomas_seleccionados = ListProperty([])
+
+    # Base de reglas de IA simple (enfermedad -> síntomas requeridos)
+    base_conocimiento = DictProperty({
+        "Fiebre aftosa": ["Fiebre", "Secreción nasal", "Decaimiento"],
+        "Parasitosis": ["Diarrea", "Pérdida de apetito"],
+        "Neumonía": ["Tos", "Fiebre", "Secreción nasal"],
+        "Problema podal": ["Cojeo"]
+    })
+
+    # Medicamentos según enfermedad
+    medicamentos = DictProperty({
+        "Fiebre aftosa": ("Flunixin", "2 ml / 50kg", "3 días"),
+        "Parasitosis": ("Ivermectina", "1 ml / 50kg", "1 día"),
+        "Neumonía": ("Oxitetra", "5 ml / 50kg", "5 días"),
+        "Problema podal": ("Ketoprofeno", "3 ml / 50kg", "3 días"),
+    })
+
+    def agregar_sintoma(self, sintoma):
+        if sintoma not in self.sintomas_seleccionados and sintoma != "Seleccionar":
+            self.sintomas_seleccionados.append(sintoma)
+            print("Síntomas actuales:", self.sintomas_seleccionados)
 
     def generar_diagnostico(self):
-        """Analiza síntomas y sugiere diagnóstico y tratamiento"""
-        sintomas = self.ids.sintomas_input.text.lower()
+        sintomas = set(self.sintomas_seleccionados)
+        diagnostico = "No identificado"
 
-        if not sintomas.strip():
-            self.ids.diagnostico_input.text = "Ingrese síntomas para analizar."
-            return
+        for enfermedad, req_sintomas in self.base_conocimiento.items():
+            if sintomas.intersection(req_sintomas):
+                diagnostico = enfermedad
+                break
 
-        if "tos" in sintomas or "respira" in sintomas:
-            diag, med, dosis, dias = "Infección respiratoria", "Oxitetra", "10 ml", "5 días"
-        elif "cojea" in sintomas or "pata" in sintomas:
-            diag, med, dosis, dias = "Lesión muscular", "Meloxicam", "5 ml", "3 días"
-        elif "diarrea" in sintomas or "vientre" in sintomas:
-            diag, med, dosis, dias = "Problemas digestivos", "Florfenicol", "8 ml", "4 días"
+        self.ids.diagnostico_input.text = diagnostico
+
+        if diagnostico in self.medicamentos:
+            med, dosis, dias = self.medicamentos[diagnostico]
+            self.ids.medicamento_input.text = med
+            self.ids.dosis_input.text = dosis
+            self.ids.dias_input.text = dias
         else:
-            diag, med, dosis, dias = "Sin diagnóstico definido", "—", "—", "—"
+            self.ids.medicamento_input.text = ""
+            self.ids.dosis_input.text = ""
+            self.ids.dias_input.text = ""
 
-        self.ids.diagnostico_input.text = diag
-        self.ids.medicamento_input.text = med
-        self.ids.dosis_input.text = dosis
-        self.ids.duracion_input.text = dias
+    def guardar_tratamiento(self):
+        print("Tratamiento guardado correctamente (aquí va tu inserción SQL)")
+
 
 # -------------------------
 # GESTOR DE PANTALLAS
@@ -118,13 +137,14 @@ class WindowManager(ScreenManager):
 # -------------------------
 # APLICACIÓN PRINCIPAL
 # -------------------------
+
 class SistemaGanaderoApp(App):
     def build(self):
         Builder.load_file("kv/main.kv")
         sm = WindowManager()
         sm.add_widget(MenuScreen(name="menu"))
         sm.add_widget(InventarioScreen(name="inventario"))
-        sm.add_widget(VeterinariaScreen(name="veterinaria"))  # 👈 IMPORTANTE
+        sm.add_widget(VeterinariaScreen(name="veterinaria"))
         sm.current = "menu"
         return sm
 

@@ -5,7 +5,9 @@
     InventarioScreen:
     VeterinariaScreen:
 
-
+# ===========================
+#        MENÚ PRINCIPAL
+# ===========================
 <MenuScreen@Screen>:
     name: "menu"
 
@@ -57,7 +59,9 @@
             background_color: 0.6, 0.2, 0.2, 1
             on_release: app.stop()
 
-
+# ===========================
+#   PANTALLA INVENTARIO
+# ===========================
 <InventarioScreen>:
     name: "inventario"
 
@@ -166,95 +170,176 @@
             background_color: 0.3, 0.3, 0.3, 1
             color: 1, 1, 1, 1
             on_release: app.root.current = "menu"
-# -------------------------
-# PANTALLA VETERINARIA
-# -------------------------
+
+
+# ===========================
+#     MÓDULO VETERINARIO
+# ===========================
 <VeterinariaScreen>:
     name: "veterinaria"
 
-    BoxLayout:
-        orientation: "vertical"
-        padding: 30
-        spacing: 15
-        canvas.before:
-            Color:
-                rgba: 1, 1, 1, 1
-            Rectangle:
-                pos: self.pos
-                size: self.size
+    ScrollView:
+        do_scroll_x: False
 
-        Label:
-            text: "🐮 Módulo Veterinario"
-            font_size: "26sp"
-            bold: True
-            color: 0.1, 0.2, 0.5, 1
-            size_hint_y: None
-            height: 50
-
-        GridLayout:
-            cols: 2
-            row_default_height: 50
-            spacing: 10
+        BoxLayout:
+            orientation: "vertical"
+            padding: 20
+            spacing: 20
             size_hint_y: None
             height: self.minimum_height
 
-            TextInput:
-                id: qr_input
-                hint_text: "Escanee o ingrese código QR"
-                multiline: False
+            Label:
+                text: "🐄 Módulo Veterinario"
+                font_size: "26sp"
+                bold: True
+                size_hint_y: None
+                height: 50
+
+            # --------------------------
+            #   SECCIÓN 1: Datos Animal
+            # --------------------------
+            BoxLayout:
+                orientation: "vertical"
+                padding: 15
+                spacing: 10
+                canvas.before:
+                    Color:
+                        rgba: 0.95, 0.95, 1, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                Label:
+                    text: "Datos del Animal"
+                    bold: True
+                    size_hint_y: None
+                    height: 30
+
+                GridLayout:
+                    cols: 2
+                    spacing: 10
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    Label:
+                        text: "ID:"
+                    TextInput:
+                        id: animal_id
+                        readonly: True
+
+                    Label:
+                        text: "Nombre:"
+                    TextInput:
+                        id: nombre_input
+                        readonly: True
+
+                    Label:
+                        text: "Raza:"
+                    TextInput:
+                        id: raza_input
+                        readonly: True
+
+            # --------------------------
+            #   SECCIÓN 2: Síntomas
+            # --------------------------
+            BoxLayout:
+                orientation: "vertical"
+                padding: 15
+                spacing: 10
+                canvas.before:
+                    Color:
+                        rgba: 0.95, 1, 0.95, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                Label:
+                    text: "Registro de Síntomas"
+                    bold: True
+                    size_hint_y: None
+                    height: 30
+
+                Spinner:
+                    id: sintomas_spinner
+                    text: "Seleccionar síntoma"
+                    values: root.lista_sintomas
+                    size_hint_y: None
+                    height: 45
+                    on_text: root.agregar_sintoma(self.text)
+
+                TextInput:
+                    id: sintomas_desc
+                    hint_text: "Descripción detallada"
+                    multiline: True
+                    size_hint_y: None
+                    height: 130
+
+                Button:
+                    text: "🔍 Generar Diagnóstico"
+                    size_hint_y: None
+                    height: 50
+                    background_color: 0.2, 0.6, 0.2, 1
+                    on_release: root.generar_diagnostico()
+
+            # --------------------------
+            #   SECCIÓN 3: Diagnóstico
+            # --------------------------
+            BoxLayout:
+                orientation: "vertical"
+                padding: 15
+                spacing: 10
+                canvas.before:
+                    Color:
+                        rgba: 1, 0.95, 0.95, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                Label:
+                    text: "Resultado del Diagnóstico"
+                    bold: True
+                    size_hint_y: None
+                    height: 30
+
+                GridLayout:
+                    cols: 2
+                    spacing: 10
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    Label:
+                        text: "Enfermedad:"
+                    TextInput:
+                        id: diagnostico_input
+                        readonly: True
+
+                    Label:
+                        text: "Medicamento:"
+                    TextInput:
+                        id: medicamento_input
+                        readonly: True
+
+                    Label:
+                        text: "Dosis:"
+                    TextInput:
+                        id: dosis_input
+                        readonly: True
+
+                    Label:
+                        text: "Días:"
+                    TextInput:
+                        id: dias_input
+                        readonly: True
 
             Button:
-                text: "📷 Escanear QR"
-                size_hint_x: 0.5
-                on_release: root.buscar_por_qr(qr_input.text)
+                text: "💾 Guardar Tratamiento"
+                size_hint_y: None
+                height: 50
+                background_color: 0.4, 0.4, 0.8, 1
+                on_release: root.guardar_tratamiento()
 
-            TextInput:
-                id: nombre_input
-                hint_text: "Nombre del animal"
-                readonly: True
-
-            TextInput:
-                id: raza_input
-                hint_text: "Raza"
-                readonly: True
-
-            TextInput:
-                id: sintomas_input
-                hint_text: "Síntomas observados"
-                multiline: True
-
-            TextInput:
-                id: diagnostico_input
-                hint_text: "Diagnóstico (automático)"
-                readonly: True
-
-            TextInput:
-                id: medicamento_input
-                hint_text: "Medicamento"
-                readonly: True
-
-            TextInput:
-                id: dosis_input
-                hint_text: "Dosis"
-                readonly: True
-
-            TextInput:
-                id: duracion_input
-                hint_text: "Duración (días)"
-                readonly: True
-
-        Button:
-            text: "🔍 Generar diagnóstico"
-            size_hint_y: None
-            height: 50
-            background_color: 0.1, 0.5, 0.1, 1
-            color: 1, 1, 1, 1
-            on_release: root.generar_diagnostico()
-
-        Button:
-            text: "⬅️ Volver al menú"
-            size_hint_y: None
-            height: 50
-            background_color: 0.3, 0.3, 0.3, 1
-            color: 1, 1, 1, 1
-            on_release: app.root.current = "menu"
+            Button:
+                text: "⬅ Volver"
+                size_hint_y: None
+                height: 50
+                background_color: 0.6, 0.2, 0.2, 1
+                on_release: app.root.current = "menu"
